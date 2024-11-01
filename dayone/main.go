@@ -5,7 +5,21 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
+
+var wordToNumber = map[string]string{
+	"one":   "1",
+	"two":   "2",
+	"three": "3",
+	"four":  "4",
+	"five":  "5",
+	"six":   "6",
+	"seven": "7",
+	"eight": "8",
+	"nine":  "9",
+	"zero":  "0",
+}
 
 func main() {
 	sum := 0
@@ -27,26 +41,89 @@ func main() {
 
 }
 
-func findNumbers(line string) int {
-	lineNumber := ""
-	firstNumber := ""
-	lastNumber := ""
+func findNumber(line string, reverse bool) string {
+	var result string
 
-	for i := 0; i < len(line); i++ {
-		str := string(line[i])
-		_, err := strconv.Atoi(str)
-		if err == nil {
-			if firstNumber == "" {
-				firstNumber = str
+	var start, end, step int
+	if reverse {
+		start = len(line) - 1
+		end = -1
+		step = -1
+	} else {
+		start = 0
+		end = len(line)
+		step = 1
+	}
+
+	for i := start; i != end; i += step {
+		character := line[i]
+		for word, number := range wordToNumber {
+			if reverse {
+				if strings.HasSuffix(line[:i+1], word) {
+					result = number
+					break
+				}
+			} else if strings.HasPrefix(line[i:], word) {
+				result = number
+				break
 			}
-			lastNumber = str
+		}
+		if result == "" && character >= '0' && character <= '9' {
+			result = string(character)
+		}
+		if result != "" {
+			break
 		}
 	}
-	if lastNumber == "" {
-		lastNumber = firstNumber
-	}
-	lineNumber = firstNumber + lastNumber
-	fmt.Println(lineNumber)
-	n, _ := strconv.Atoi(lineNumber)
+
+	return result
+}
+
+func findNumbers(line string) int {
+	first := findNumber(line, false)
+	last := findNumber(line, true)
+
+	fmt.Println(line)
+	fmt.Println(first, last)
+
+	n, _ := strconv.Atoi(first + last)
+
 	return n
+}
+
+func findFirstAndLast(line string) string {
+	var first, last string
+
+	// Find first number
+	for i, char := range line {
+		for word, number := range wordToNumber {
+			if strings.HasPrefix(line[i:], word) {
+				first = number
+				break
+			}
+		}
+		if first == "" && char >= '0' && char <= '9' {
+			first = string(char)
+		}
+		if first != "" {
+			break
+		}
+	}
+	// Find last number
+	for i := len(line) - 1; i >= 0; i-- {
+		for word, number := range wordToNumber {
+			if strings.HasSuffix(line[:i+1], word) {
+				last = number
+				break
+			}
+		}
+		if last == "" && line[i] >= '0' && line[i] <= '9' {
+			last = string(line[i])
+		}
+		if last != "" {
+			break
+		}
+	}
+
+	return first + last
 }
